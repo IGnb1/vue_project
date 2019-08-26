@@ -26,7 +26,7 @@
       <el-table-column prop="mobile" label="电话"></el-table-column>
       <el-table-column label="用户状态">
         <template slot-scope="scope">
-          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949" @change="changeStatu(scope.row.id,scope.row.mg_state)"></el-switch>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="400">
@@ -40,10 +40,10 @@
             ></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="分配角色" placement="top">
-            <el-button type="success" plain icon="el-icon-share"></el-button>
+            <el-button type="success" plain icon="el-icon-share" @click="showRole(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="删除" placement="top">
-            <el-button type="warning" plain icon="el-icon-delete"></el-button>
+            <el-button type="warning" plain icon="el-icon-delete" @click="showDel(scope.row.id)"></el-button>
           </el-tooltip>
         </template>
       </el-table-column>
@@ -97,13 +97,53 @@
         <el-button type="primary" @click="addUser">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 角色分配 -->
+    <el-dialog title="角色分配" :visible.sync="grantDialogFormVisible">
+      <el-form :model="addForm" :rules="rules" ref="addForm">
+        <el-form-item label="用户名：">
+          <span>{{grantForm.username}}</span>
+        </el-form-item>
+        <el-form-item label="角色：">
+          <el-select v-model="grantForm.rid" clearable placeholder="请选择">
+            <el-option
+              v-for="item in roleList"
+              :key="item.value"
+              :label="item.roleName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="grantDialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="grantRole">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
-import { getAllUsers, edituser, add } from '@/api/user_index.js'
+import {
+  getAllUsers,
+  edituser,
+  add,
+  grantUserRole,
+  delUserById,
+  changestate
+} from '@/api/user_index.js'
+import { getAllRoleList } from '@/api/role_index.js'
 export default {
   data () {
     return {
+      // 角色分配
+      grantDialogFormVisible: false,
+      roleList: [],
+      grantForm: {
+        username: '',
+        // 用户id
+        id: '',
+        // 角色id
+        rid: ''
+      },
       // 添加
       addDialogFormVisible: false,
       addForm: {
@@ -191,7 +231,7 @@ export default {
     init () {
       getAllUsers(this.userobj)
         .then(res => {
-          //   console.log(res)
+          // console.log(res)
           if (res.data.meta.status === 200) {
             this.userList = res.data.data.users
             this.total = res.data.data.total
@@ -218,7 +258,7 @@ export default {
     // 编辑用户
     editUser () {
       // console.log(this.editForm)
-      this.$refs.editForm.validate((valid) => {
+      this.$refs.editForm.validate(valid => {
         if (valid) {
           // alert('submit!')
           edituser(this.editForm)
@@ -246,7 +286,7 @@ export default {
       this.addDialogFormVisible = true
     },
     addUser () {
-      this.$refs.addForm.validate((valid) => {
+      this.$refs.addForm.validate(valid => {
         if (valid) {
           // alert('submit!')
           add(this.addForm)
@@ -268,10 +308,85 @@ export default {
           return false
         }
       })
+    },
+    // 角色分配
+    showRole (row) {
+      // console.log(row)
+      this.grantDialogFormVisible = true
+      this.grantForm.username = row.username
+      this.grantForm.id = row.id
+      this.grantForm.rid = row.rid
+    },
+    grantRole () {
+      // console.log(this.grantForm)
+      if (this.grantForm.rid) {
+        grantUserRole(this.grantForm)
+          .then(res => {
+            // console.log(res)
+            if (res.data.meta.status === 200) {
+              this.$message.success(res.data.meta.msg)
+              this.grantDialogFormVisible = false
+              this.init()
+            }
+          })
+          .catch(() => {
+            this.$message.warning('设置角色失败')
+          })
+      } else {
+        this.$message.error('请选择角色')
+      }
+    },
+    // 弹出删除提示框
+    showDel (id) {
+      // console.log(id)
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          delUserById(id).then(res => {
+            console.log(res)
+            if (res.data.meta.status === 200) {
+              this.$message.success('删除成功!')
+              this.userobj.pagenum = Math.ceil((this.total - 1) / this.userobj.pagesize)
+              this.init()
+            } else {
+              this.$message.warning('删除失败!')
+            }
+          })
+        })
+        .catch(() => {
+          this.$message.info('已取消删除')
+        })
+    },
+    // 修改状态
+    changeStatu (uid, type) {
+      // console.log(row)
+      changestate(uid, type)
+        .then(res => {
+          // console.log(res)
+          if (res.data.meta.status === 200) {
+            this.$message.success(res.data.meta.msg)
+          } else {
+            this.$message.error(res.data.meta.msg)
+          }
+        })
+        .catch(() => {
+          // console.log(err)
+          this.$message.error('系统出错')
+        })
     }
   },
   mounted () {
     this.init()
+    // 获取角色列表
+    getAllRoleList()
+      .then(res => {
+        // console.log(res)
+        this.roleList = res.data.data
+      })
+      .catch(() => {})
   }
 }
 </script>
