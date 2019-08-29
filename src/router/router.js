@@ -6,6 +6,11 @@ import welcome from '@/views/welcome.vue'
 import users from '@/views/users.vue'
 import rights from '@/views/rights/rights.vue'
 import roles from '@/views/rights/roles.vue'
+import Goods from '@/views/goods/goods.vue'
+import List from '@/views/goods/list.vue'
+import Add from '@/views/goods/add.vue'
+import Params from '@/views/params.vue'
+import Categories from '@/views/categories.vue'
 
 Vue.use(VueRouter)
 
@@ -46,6 +51,34 @@ export default new VueRouter({
           name: 'roles',
           path: 'roles',
           component: roles
+        },
+        {
+          name: 'goods',
+          path: 'goods',
+          component: Goods,
+          redirect: { name: 'list' },
+          children: [
+            {
+              name: 'list',
+              path: 'list',
+              component: List
+            },
+            {
+              name: 'add',
+              path: 'add',
+              component: Add
+            }
+          ]
+        },
+        {
+          name: 'Params',
+          path: 'Params',
+          component: Params
+        },
+        {
+          name: 'Categories',
+          path: 'Categories',
+          component: Categories
         }
       ]
     }

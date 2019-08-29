@@ -11,17 +11,17 @@
           active-text-color="#ffd04b"
           :unique-opened='true'
         >
-          <el-submenu index="1">
+          <el-submenu :index="''+item.id" v-for="item in menuList" :key="item.id">
             <template slot="title">
               <i class="el-icon-location"></i>
-              <span>用户管理</span>
+              <span>{{item.authName}}</span>
             </template>
-            <el-menu-item index="/home/users">
+            <el-menu-item :index="'/home/'+ Item.path" v-for="Item in item.children" :key="Item.id">
               <i class="el-icon-menu"></i>
-              <span slot="title">用户列表</span>
+              <span slot="title">{{Item.authName}}</span>
             </el-menu-item>
           </el-submenu>
-          <el-submenu index="1-1">
+          <!-- <el-submenu index="1-1">
             <template slot="title">
               <i class="el-icon-location"></i>
               <span>权限管理</span>
@@ -34,7 +34,7 @@
               <i class="el-icon-menu"></i>
               <span slot="title">角色列表</span>
             </el-menu-item>
-          </el-submenu>
+          </el-submenu> -->
         </el-menu>
       </el-aside>
       <el-container>
@@ -51,7 +51,23 @@
   </div>
 </template>
 <script>
-export default {}
+import { getRightMenu } from '@/api/right_index.js'
+export default {
+  data () {
+    return {
+      menuList: []
+    }
+  },
+  mounted () {
+    getRightMenu()
+      .then(res => {
+        // console.log(res)
+        if (res.data.meta.status === 200) {
+          this.menuList = res.data.data
+        }
+      })
+  }
+}
 </script>
 <style lang='less' scoped>
 .home {

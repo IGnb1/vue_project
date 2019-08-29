@@ -16,7 +16,7 @@
       >
         <el-button slot="append" icon="el-icon-search" @click="init"></el-button>
       </el-input>
-      <el-button type="success" @click="adduser">添加用户</el-button>
+      <el-button type="success" @click="adduser" plain>添加用户</el-button>
     </div>
     <!-- 表格 -->
     <el-table :data="userList" border style="width: 100%;margin-top:15px">

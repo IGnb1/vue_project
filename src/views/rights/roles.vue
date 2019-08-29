@@ -82,11 +82,11 @@
     </el-table>
     <!-- 添加角色 -->
     <el-dialog title="添加角色" :visible.sync="addDialogFormVisible">
-      <el-form :model="addroleobj">
-        <el-form-item label="角色名称" :label-width="'120px'">
+      <el-form :model="addroleobj" ref="addform">
+        <el-form-item label="角色名称" :label-width="'120px'" prop="roleName">
           <el-input v-model="addroleobj.roleName" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="角色描述" :label-width="'120px'">
+        <el-form-item label="角色描述" :label-width="'120px'"  prop="roleDesc">
           <el-input v-model="addroleobj.roleDesc" autocomplete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -225,10 +225,11 @@ export default {
     addRole () {
       addrole(this.addroleobj)
         .then(res => {
-          console.log(res)
+          // console.log(res)
           if (res.data.meta.status === 201) {
             this.addDialogFormVisible = false
             this.$message.success(res.data.meta.msg)
+            this.$refs.addform.resetFields()
             this.init()
           } else {
             this.$message.warning(res.data.meta.msg)
